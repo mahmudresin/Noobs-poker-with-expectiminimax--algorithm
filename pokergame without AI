@@ -1,0 +1,143 @@
+import tkinter as tk
+from tkinter import messagebox
+import random
+import numpy as np
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+
+class PokerGame:
+    def __init__(self):
+        self.game_state = self.initialize_game_state()
+        self.action_space = self.define_action_space()
+        self.transition_model = self.define_transition_model()
+        self.reward_function = self.define_reward_function()
+        self.opponent_ai = self.define_opponent_ai()
+        self.root = tk.Tk()
+        self.root.title("Poker Game Simulator")
+        self.create_widgets()
+
+    def initialize_game_state(self):
+        # Initialize the game state with random player hands and community cards
+        player_hand = [random.randint(1, 52) for _ in range(2)]
+        community_cards = [random.randint(1, 52) for _ in range(5)]
+        return {"player_hand": player_hand, "community_cards": community_cards, "game_over": False, "bet": 0}
+
+    def define_action_space(self):
+        # Define the possible actions a player can take
+        return ["call", "raise", "fold"]
+
+    def define_transition_model(self):
+        # Define the transition model that determines the next game state
+        def transition_model(game_state, action):
+            # Simulate the next game state based on the current state and action
+            if action == "call":
+                # Simulate the next community card
+                game_state["community_cards"].append(random.randint(1, 52))
+            elif action == "raise":
+                # Simulate the next bet
+                game_state["bet"] += 10
+            elif action == "fold":
+                # Simulate the end of the game
+                game_state["game_over"] = True
+            return game_state
+        return transition_model
+
+    def define_reward_function(self):
+        # Define the reward function that assigns a reward to each game state
+        def reward_function(game_state):
+            # Assign a reward based on the game state
+            if game_state["game_over"]:
+                if random.random() < 0.5:
+                    return 10
+                else:
+                    return -10
+            else:
+                return 0
+        return reward_function
+
+    def define_opponent_ai(self):
+        # Define the opponent AI using a random forest classifier
+        X = np.array([[1, 2], [3, 4], [5, 6]])
+        y = np.array([0, 0, 1])
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        clf = RandomForestClassifier(n_estimators=100)
+        clf.fit(X_train, y_train)
+        return clf
+
+    def expectiminimax(self, game_state, depth):
+        # Recursively explore the game tree and evaluate the expected utility
+        if depth == 0 or game_state["game_over"]:
+            return self.reward_function(game_state)
+        elif game_state["current_player"] == "player":
+            # Evaluate the expected utility of the player's actions
+            expected_utility = -float("inf")
+            for action in self.action_space:
+                next_game_state = self.transition_model(game_state.copy(), action)
+                utility = self.expectiminimax(next_game_state, depth - 1)
+                expected_utility = max(expected_utility, utility)
+            return expected_utility
+        else:
+            # Evaluate the expected utility of the opponent's actions
+            expected_utility = float("inf")
+            for action in self.action_space:
+                next_game_state = self.transition_model(game_state.copy(), action)
+                utility = self.expectiminimax(next_game_state, depth - 1)
+                expected_utility = min(expected_utility, utility)
+            return expected_utility
+
+    def create_widgets(self):
+        self.player_hand_label = tk.Label(self.root, text="Player Hand: " + str(self.game_state["player_hand"]))
+        self.player_hand_label.pack()
+        self.community_cards_label = tk.Label(self.root, text="Community Cards: " + str(self.game_state["community_cards"]))
+        self.community_cards_label.pack()
+        self.bet_label = tk.Label(self.root, text="Bet: " + str(self.game_state["bet"]))
+        self.bet_label.pack()
+        self.action_label = tk.Label(self.root, text="Choose an action:")
+        self.action_label.pack()
+        self.call_button = tk.Button(self.root, text="Call", command=self.call)
+        self.call_button.pack()
+        self.raise_button = tk.Button(self.root, text="Raise", command=self.raise_bet)
+        self.raise_button.pack()
+        self.fold_button = tk.Button(self.root, text="Fold", command=self.fold)
+        self.fold_button.pack()
+        self.result_label = tk.Label(self.root, text="")
+        self.result_label.pack()
+
+    def call(self):
+        self.game_state = self.transition_model(self.game_state, "call")
+        self.player_hand_label['text'] = "Player Hand: " + str(self.game_state["player_hand"])
+        self.community_cards_label['text'] = "Community Cards: " + str(self.game_state["community_cards"])
+        self.bet_label['text'] = "Bet: " + str(self.game_state["bet"])
+        if self.game_state["game_over"]:
+            self.result_label['text'] = "Game over. Reward: " + str(self.reward_function(self.game_state))
+            self.call_button['state'] = 'disabled'
+            self.raise_button ['state'] = 'disabled'
+            self.fold_button['state'] = 'disabled'
+
+    def raise_bet(self):
+        self.game_state = self.transition_model(self.game_state, "raise")
+        self.player_hand_label['text'] = "Player Hand: " + str(self.game_state["player_hand"])
+        self.community_cards_label['text'] = "Community Cards: " + str(self.game_state["community_cards"])
+        self.bet_label['text'] = "Bet: " + str(self.game_state["bet"])
+        if self.game_state["game_over"]:
+            self.result_label['text'] = "Game over. Reward: " + str(self.reward_function(self.game_state))
+            self.call_button['state'] = 'disabled'
+            self.raise_button['state'] = 'disabled'
+            self.fold_button['state'] = 'disabled'
+
+    def fold(self):
+        self.game_state = self.transition_model(self.game_state, "fold")
+        self.player_hand_label['text'] = "Player Hand: " + str(self.game_state["player_hand"])
+        self.community_cards_label['text'] = "Community Cards: " + str(self.game_state["community_cards"])
+        self.bet_label['text'] = "Bet: " + str(self.game_state["bet"])
+        if self.game_state["game_over"]:
+            self.result_label['text'] = "Game over. Reward: " + str(self.reward_function(self.game_state))
+            self.call_button['state'] = 'disabled'
+            self.raise_button['state'] = 'disabled'
+            self.fold_button['state'] = 'disabled'
+
+    def play_game(self):
+        self.root.mainloop()
+
+game = PokerGame()
+game.play_game()
