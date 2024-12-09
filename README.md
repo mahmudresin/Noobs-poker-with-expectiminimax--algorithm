@@ -1,7 +1,7 @@
+NOOBS POKER
 
- Noobs Poker - README
 Introduction
-**Noobs Poker** is a graphical poker game built using Python's `pygame` library. It provides a fun and interactive experience with multiple rounds of poker involving a player and three computer-controlled opponents. The game showcases classic poker gameplay, where players can select and replace cards in their hands, while AI opponents make decisions using an Expectiminimax algorithm.
+Noobs Poker is a graphical poker game built using Python's `pygame` library. It provides a fun and interactive experience with multiple rounds of poker involving a player and three computer-controlled opponents. The game showcases classic poker gameplay, where players can select and replace cards in their hands, while AI opponents make decisions using an Expectiminimax algorithm.
 
 Features
 - A simple poker game with 4 players (1 human player and 3 AI opponents).
